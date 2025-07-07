@@ -17,7 +17,7 @@ dependencies:
   flutter_chat_types:
     git:
       url: https://github.com/GATEIT/flutter_chat_types
-      ref: main
+      ref: dev
 
   meta: ^1.15.0
   mime: '>=1.0.2 <3.0.0'
