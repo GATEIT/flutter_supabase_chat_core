@@ -107,6 +107,7 @@ class SupabaseChatCore {
   }
 
   final Map<String, RealtimeChannel> _onlineUserChannels = {};
+  final Map<String, StreamController<UserOnlineStatus>> _onlineUserControllers = {};
 
   UserOnlineStatus _userStatus(List<Presence> presences, String uid) =>
       presences.map((e) => e.payload['uid']).contains(uid)
@@ -115,16 +116,21 @@ class SupabaseChatCore {
 
   /// Returns a stream of online user state from Supabase Realtime.
   Stream<UserOnlineStatus> userOnlineStatus(String uid) {
-    final controller = StreamController<UserOnlineStatus>();
-    if (_onlineUserChannels[uid] == null) {
+    if (_onlineUserControllers[uid] == null) {
+      final controller = StreamController<UserOnlineStatus>.broadcast();
+      _onlineUserControllers[uid] = controller;
+
       _onlineUserChannels[uid] = _getUserOnlineStatusChannel(uid);
-      _onlineUserChannels[uid]!.onPresenceJoin((payload) {
-        controller.sink.add(_userStatus(payload.newPresences, uid));
-      }).onPresenceLeave((payload) {
-        controller.sink.add(_userStatus(payload.currentPresences, uid));
-      }).subscribe();
+      _onlineUserChannels[uid]!
+        .onPresenceJoin((payload) {
+          controller.sink.add(_userStatus(payload.newPresences, uid));
+        })
+        .onPresenceLeave((payload) {
+          controller.sink.add(_userStatus(payload.currentPresences, uid));
+        })
+        .subscribe();
     }
-    return controller.stream;
+    return _onlineUserControllers[uid]!.stream;
   }
 
   /// Returns the URL of an asset path in the bucket
