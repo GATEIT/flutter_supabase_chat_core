@@ -120,3 +120,6 @@ app.*.symbols
 
 # Test scripts files
 test-scripts
+
+# FVM Version Cache
+.fvm/
